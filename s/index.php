@@ -1,5 +1,30 @@
 <?php
 
+class Json
+{
+    public static function from($data)
+    {
+        return json_encode($data);
+    }
+}
+
+class UserRequest
+{
+    protected static $rules = [
+        'name' => 'string',
+        'email' => 'string',
+    ];
+
+    public static function validate($data)
+    {
+        foreach (self::$rules as $property => $type) {
+            if (gettype($data[$property]) != $type) {
+                throw new Exception("Bad Request, User property {$property} must be of type {$type}");
+            }
+        }
+    }
+}
+
 class User
 {
     public string $name;
@@ -11,30 +36,13 @@ class User
         $this->email = $data['email'];
     }
 
-    public function formatJson()
-    {
-        return json_encode(['name' => $this->name, 'email' => $this->email]);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function validate($data)
-    {
-        if (!isset($data['name'])) {
-            throw new Exception("Bad Request, User requires a name");
-        }
-        if (!isset($data['name'])) {
-            throw new Exception("Bad Request, User email required");
-        }
-    }
 }
 
 $data = $_GET;
 $user = new User($data);
 try {
-    $user->validate($data);
+    UserRequest::validate($data);
 } catch (Exception $e) {
     echo $e->getMessage();
 }
-print_r($user->formatJson());
+print_r(Json::from($data));
